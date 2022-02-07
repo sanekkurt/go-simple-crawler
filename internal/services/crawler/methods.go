@@ -2,13 +2,10 @@ package crawler
 
 import (
 	"context"
-	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"go-simple-crawler/internal/config"
-	"go-simple-crawler/internal/logging"
+	"go-simple-crawler/internal/helpers"
 	"go-simple-crawler/internal/types/crawler"
 	wp "go-simple-crawler/internal/worker_pool"
-	"net/http"
 	"sync"
 )
 
@@ -60,7 +57,7 @@ func GetTitles(ctx context.Context, data crawler.URLsData) ([]crawler.ResultData
 
 func getFunc(ctx context.Context, url string, c chan crawler.ResultData) func() {
 	return func() {
-		title, err := GetTitle(ctx, url)
+		title, err := helpers.GetTagInfoFromWebPage(ctx, url, titleTag)
 		if err != nil {
 			c <- crawler.ResultData{
 				URL:   url,
@@ -75,34 +72,4 @@ func getFunc(ctx context.Context, url string, c chan crawler.ResultData) func() 
 			Title: title,
 		}
 	}
-}
-
-func GetTitle(ctx context.Context, url string) (string, error) {
-	var (
-		log = logging.GetLoggerFromContext(ctx)
-	)
-
-	res, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-
-	defer func() {
-		if err := res.Body.Close(); err != nil {
-			log.Error(err)
-		}
-	}()
-
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error the page gave the wrong status: %d", res.StatusCode)
-	}
-
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	result := doc.Find("title").Text()
-
-	return result, nil
 }
