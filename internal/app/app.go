@@ -37,10 +37,13 @@ func RunApp() {
 
 	log.Info("go-simple-crawler server starting")
 
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
-	go interrupt.WaitInterruptSignal(log, c)
+	go interrupt.WaitInterruptSignal(log, c, cancelFunc)
 
 	srv, err := server.NewServer(ctx, cfg, log)
 	if err != nil {
