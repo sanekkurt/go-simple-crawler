@@ -10,9 +10,8 @@ import (
 func InitRegistry(log *zap.SugaredLogger, cfg config.AppConfig) common.IServerServicesRegistry {
 	var (
 		reg = make(common.IServerServicesRegistry, 0)
+		srv = crawler.Init(log, cfg)
 	)
-
-	srv := crawler.Init(log, cfg)
 
 	reg = append(reg, srv)
 
